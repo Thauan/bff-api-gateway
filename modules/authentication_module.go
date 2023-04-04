@@ -49,7 +49,7 @@ func SignIn() http.HandlerFunc {
 
 		res, err2 := http.Post(authApiUrl+"/sign_in", "application/json", payload)
 
-		if err != nil {
+		if err2 != nil {
 			log.Fatalln(err2)
 		}
 
@@ -57,8 +57,9 @@ func SignIn() http.HandlerFunc {
 
 		var resBody interface{}
 		err3 := json.NewDecoder(res.Body).Decode(&resBody)
+
 		if err3 != nil {
-			log.Fatalln(err)
+			log.Fatalln(err3)
 		}
 
 		data, err4 := json.Marshal(resBody)
