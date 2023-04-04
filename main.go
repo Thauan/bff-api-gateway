@@ -1,41 +1,28 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/Thauan/bff-api-gateway/handlers"
+	"github.com/Thauan/bff-api-gateway/modules"
 
 	"github.com/gorilla/mux"
 )
 
 func init() {
-}
-
-type User struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	handlers.LoadEnv()
 }
 
 func main() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/bff/v1/sign_in", func(w http.ResponseWriter, r *http.Request) {
-		reqBody, _ := ioutil.ReadAll(r.Body)
+	r.HandleFunc("/bff/v1/sign_in", modules.SignIn()).Methods("POST")
 
-		var user User
-		json.Unmarshal(reqBody, &user)
-		json.NewEncoder(w).Encode(user)
+	Port := handlers.GetEnvWithKey("PORT")
 
-		newData, err := json.Marshal(user)
+	fmt.Println("Running in http://localhost:" + Port)
 
-		println(newData)
-		println(err)
-
-		// Chama a camada de serviço e retorna uma resposta adequada.
-		// myData := User{Email: "teste", Password: "teste"}
-		json.NewEncoder(w).Encode(newData)
-	})
-
-	log.Fatal(http.ListenAndServe(":9090", r))
+	log.Fatal(http.ListenAndServe(":"+Port, r))
 }
