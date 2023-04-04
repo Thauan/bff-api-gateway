@@ -19,6 +19,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/bff/v1/sign_in", modules.SignIn()).Methods("POST")
+	r.HandleFunc("/bff/v1/sign_up", modules.SignUp()).Methods("POST")
 
 	Port := handlers.GetEnvWithKey("PORT")
 
