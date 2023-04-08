@@ -34,8 +34,10 @@ func SignIn() http.HandlerFunc {
 		authApiUrl := handlers.GetEnvWithKey("AUTHENTICATION_API_URL")
 
 		userCred := &user_credentials.UserCredentials{
-			Email:    t.User.Email,
-			Password: t.User.Password,
+			User: &user_credentials.UserCredentials_User{
+				Email:    t.User.Email,
+				Password: t.User.Password,
+			},
 		}
 
 		fmt.Println(userCred)
@@ -43,8 +45,10 @@ func SignIn() http.HandlerFunc {
 		// Codificar o objeto protobuf para enviar como corpo da solicitação
 		body, err2 := proto.Marshal(userCred)
 
+		fmt.Println(body)
+
 		if err2 != nil {
-			log.Fatalln(err2.Error())
+			log.Fatal("Error marshaling request:", err2.Error())
 		}
 
 		payload := bytes.NewBuffer(body)
