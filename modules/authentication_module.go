@@ -3,7 +3,6 @@ package modules
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -45,12 +44,10 @@ func SignIn() http.HandlerFunc {
 
 		payload := bytes.NewBuffer(body)
 
-		fmt.Println(payload)
-
 		res, err2 := http.Post(authApiUrl+"/sign_in", "application/json", payload)
 
 		if err2 != nil {
-			log.Fatalln(err2)
+			log.Fatalln("Erro ao ler resposta: " + err2.Error())
 		}
 
 		defer res.Body.Close()
@@ -68,9 +65,9 @@ func SignIn() http.HandlerFunc {
 			log.Fatalln(err)
 		}
 
-		fmt.Println(data)
+		statusCode := res.StatusCode
 
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(statusCode)
 		w.Write(data)
 	}
 }
@@ -101,8 +98,6 @@ func SignUp() http.HandlerFunc {
 
 		payload := bytes.NewBuffer(body)
 
-		fmt.Println(payload)
-
 		res, err2 := http.Post(authApiUrl+"/sign_up", "application/json", payload)
 
 		if err != nil {
@@ -123,9 +118,9 @@ func SignUp() http.HandlerFunc {
 			log.Fatalln(err)
 		}
 
-		fmt.Println(data)
+		statusCode := res.StatusCode
 
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(statusCode)
 		w.Write(data)
 	}
 }
