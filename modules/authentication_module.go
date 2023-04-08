@@ -3,10 +3,14 @@ package modules
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/Thauan/bff-api-gateway/handlers"
+	user_credentials "github.com/Thauan/bff-api-gateway/shared/protobuf"
+	"google.golang.org/protobuf/proto"
 )
 
 type UserCredentials struct {
@@ -24,51 +28,61 @@ func SignIn() http.HandlerFunc {
 		var t UserRequest
 		err := decoder.Decode(&t)
 		if err != nil {
-			panic(err)
+			log.Fatalln(err.Error())
 		}
 
 		authApiUrl := handlers.GetEnvWithKey("AUTHENTICATION_API_URL")
 
-		userReq := UserRequest{
-			User: UserCredentials{
-				Email:    t.User.Email,
-				Password: t.User.Password,
-			},
+		userCred := &user_credentials.UserCredentials{
+			Email:    t.User.Email,
+			Password: t.User.Password,
 		}
 
-		body, err := json.Marshal(userReq)
+		fmt.Println(userCred)
 
-		if err != nil {
-			log.Fatalln(err.Error())
+		// Codificar o objeto protobuf para enviar como corpo da solicitação
+		body, err2 := proto.Marshal(userCred)
+
+		if err2 != nil {
+			log.Fatalln(err2.Error())
 		}
 
 		payload := bytes.NewBuffer(body)
 
-		res, err2 := http.Post(authApiUrl+"/sign_in", "application/json", payload)
-
-		if err2 != nil {
-			log.Fatalln("Erro ao ler resposta: " + err2.Error())
+		// Enviar a solicitação HTTP POST
+		res, err3 := http.Post(authApiUrl+"/sign_in", "application/octet-stream", payload)
+		if err3 != nil {
+			log.Fatalln("Erro ao ler resposta: " + err3.Error())
 		}
 
 		defer res.Body.Close()
 
-		var resBody interface{}
-		err3 := json.NewDecoder(res.Body).Decode(&resBody)
-
-		if err3 != nil {
-			log.Fatalln(err3)
-		}
-
-		data, err4 := json.Marshal(resBody)
+		// Ler a resposta e decodificar em um objeto protobuf
+		resBody := &user_credentials.AuthResponse{}
+		data, err4 := ioutil.ReadAll(res.Body)
 
 		if err4 != nil {
-			log.Fatalln(err)
+			log.Fatalln(err4.Error())
+		}
+
+		fmt.Println(data)
+		err5 := proto.Unmarshal(data, resBody)
+
+		if err5 != nil {
+			log.Fatalln(err5.Error())
+		}
+
+		jsonBytes, err6 := json.Marshal(resBody)
+
+		if err6 != nil {
+			log.Fatalln(err5.Error())
 		}
 
 		statusCode := res.StatusCode
 
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
-		w.Write(data)
+		w.Write(jsonBytes)
 	}
 }
 
